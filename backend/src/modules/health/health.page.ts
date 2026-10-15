@@ -97,6 +97,8 @@ export function renderHealthPage(report: HealthReport): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="refresh" content="${REFRESH_SECONDS}">
   <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12111a">
+  <link rel="icon" href="${faviconDataUri}">
   <title>${isHealthy ? 'Operativo' : 'Degradado'} · API del portafolio OSG</title>
   <style>${styles}</style>
 </head>
@@ -169,6 +171,11 @@ export function renderHealthPage(report: HealthReport): string {
 </body>
 </html>`
 }
+
+/** Ícono de la pestaña: el isotipo OSG incrustado como data URI (la CSP de Helmet permite img data:) */
+const faviconDataUri = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#2e2668"/><g fill="none" stroke="#e2dcf9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="30" r="7"/><path d="M37 24.5C35.6 22.7 33.8 22 32 22c-3.3 0-5.5 1.9-5.5 4.3 0 4.7 11 2.7 11 7.5 0 2.4-2.2 4.2-5.5 4.2-2 0-4.2-.7-5.5-2.7"/><path d="M53.95 25.05A7 7 0 1 0 56 30h-6"/></g><rect x="8" y="44" width="14" height="3.5" rx="1.75" fill="#a3deca"/></svg>',
+)}`
 
 /** Isotipo OSG (el mismo del portafolio) */
 const logoSvg = `<svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
