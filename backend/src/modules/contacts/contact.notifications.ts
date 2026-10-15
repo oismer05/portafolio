@@ -1,4 +1,4 @@
-import { mailMode, sendMail } from '../../services/mail/mailer.js'
+import { deliversRealEmail, sendMail } from '../../services/mail/mailer.js'
 import { logger } from '../../shared/logger.js'
 import { contactRepository } from './contact.repository.js'
 import { buildClientConfirmationEmail } from './emails/clientConfirmation.email.js'
@@ -11,7 +11,7 @@ import { buildOwnerNotificationEmail } from './emails/ownerNotification.email.js
  *  2. Confirmación para la persona que escribió.
  *
  * Se envían en paralelo y por separado: si uno falla, el otro sale igual.
- * Cuando un correo se envía de verdad (modo SMTP), se registra la fecha en la base de datos.
+ * Cuando un correo se entrega de verdad (no es vista previa), se registra la fecha en la base de datos.
  * Nunca lanza errores: un problema con el correo no debe afectar al visitante.
  */
 export async function sendContactEmails(contact: ContactEmailData): Promise<void> {
@@ -30,7 +30,7 @@ export async function sendContactEmails(contact: ContactEmailData): Promise<void
       continue
     }
 
-    if (mailMode === 'smtp') {
+    if (deliversRealEmail) {
       await contactRepository.markEmailSent(contact.id, column).catch((error: unknown) => {
         logger.error(`No se pudo registrar el envío (${column}) del mensaje #${contact.id}`, error)
       })

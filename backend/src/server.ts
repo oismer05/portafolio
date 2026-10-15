@@ -1,7 +1,7 @@
 import { createApp } from './app.js'
 import { env } from './config/env.js'
 import { db, isDatabaseReachable } from './database/connection.js'
-import { mailMode, previewDirectory, verifyMailer } from './services/mail/mailer.js'
+import { deliversRealEmail, mailProviderName, previewDirectory, verifyMailer } from './services/mail/mailer.js'
 import { logger } from './shared/logger.js'
 
 const app = createApp()
@@ -13,11 +13,10 @@ const server = app.listen(env.PORT, async () => {
   if (databaseUp) logger.info(`🗄️  MySQL conectado (${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME})`)
   else logger.warn('⚠️  No se pudo conectar a MySQL. Revisa las variables DB_* y que el servidor esté encendido')
 
-  if (mailMode === 'smtp') {
-    const smtpReady = await verifyMailer()
-    if (smtpReady) logger.info(`📧 Correo activo: se enviarán notificaciones a ${env.MAIL_TO}`)
+  if (deliversRealEmail) {
+    if (await verifyMailer()) logger.info(`📧 Correo activo con ${mailProviderName}: notificaciones a ${env.MAIL_TO}`)
   } else {
-    logger.info(`📧 Correo en modo vista previa (sin SMTP): los correos se guardan en ${previewDirectory}`)
+    logger.info(`📧 Correo en modo vista previa (sin proveedor): los correos se guardan en ${previewDirectory}`)
   }
 })
 

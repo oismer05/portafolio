@@ -166,21 +166,38 @@ Cada mensaje del formulario envía **dos correos** con el diseño de la marca:
 
 Las plantillas están en `backend/src/modules/contacts/emails/` y las piezas visuales en `backend/src/services/mail/templates/layout.ts`.
 
-**Activar el envío con Gmail:**
+**Proveedores de correo** (`backend/src/services/mail/providers/`). Se usa el primero que esté configurado:
 
-1. Activa la [verificación en 2 pasos](https://myaccount.google.com/signinoptions/two-step-verification) en tu cuenta de Google.
-2. Crea una [contraseña de aplicación](https://myaccount.google.com/apppasswords) (nómbrala "Portafolio").
-3. En `backend/.env` completa:
-   ```
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USER=oismer3405@gmail.com
-   SMTP_PASS=la-contraseña-de-16-letras-sin-espacios
-   ```
-4. Ejecuta `npm run mail:test`: te llegan los dos correos de ejemplo a tu bandeja.
+| Proveedor | Variables | Cuándo usarlo |
+| --------- | --------- | ------------- |
+| Resend | `RESEND_API_KEY`, `MAIL_FROM` | Con dominio propio (100 correos/día gratis) |
+| Brevo | `BREVO_API_KEY`, `MAIL_FROM` | Con dominio propio (300 correos/día gratis) |
+| **Google Apps Script** | `GOOGLE_SCRIPT_URL`, `GOOGLE_SCRIPT_SECRET` | **Producción en Railway sin dominio** (gratis, ~100 destinatarios/día) |
+| SMTP (Gmail) | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` | Desarrollo local (Railway Trial/Hobby bloquea SMTP) |
+| Vista previa | — | Sin proveedor: guarda los correos como HTML en `backend/.mail-previews/` |
 
-**Sin SMTP configurado** (modo vista previa), los correos no se envían: se guardan como HTML en `backend/.mail-previews/`.
-Con `npm run mail:preview` generas los dos correos con datos de ejemplo para revisar el diseño en el navegador.
+**Activar Google Apps Script (producción):**
+
+1. Genera una clave secreta: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+2. Entra a [script.google.com](https://script.google.com) con tu Gmail → **Nuevo proyecto** → pega el contenido de
+   `backend/google-apps-script/Code.gs` y guarda.
+3. **Configuración del proyecto** (ícono ⚙️) → **Propiedades del script** → agrega `RELAY_SECRET` con la clave del paso 1.
+4. **Implementar → Nueva implementación** → tipo **Aplicación web** → *Ejecutar como:* **Yo** ·
+   *Quién tiene acceso:* **Cualquier usuario** → **Implementar** y autoriza el permiso de enviar correos.
+5. Copia la URL que termina en `/exec` y en Railway agrega:
+   ```
+   GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/.../exec
+   GOOGLE_SCRIPT_SECRET=<la clave del paso 1>
+   ```
+
+> Si cambias `Code.gs`, crea una **nueva versión** de la implementación (Implementar → Gestionar implementaciones → editar → Nueva versión): la URL se mantiene.
+
+**Gmail por SMTP (desarrollo local):** activa la [verificación en 2 pasos](https://myaccount.google.com/signinoptions/two-step-verification),
+crea una [contraseña de aplicación](https://myaccount.google.com/apppasswords) y completa `SMTP_HOST=smtp.gmail.com`,
+`SMTP_USER` y `SMTP_PASS` en `backend/.env`.
+
+`npm run mail:test` envía los dos correos de ejemplo a tu bandeja con el proveedor activo;
+`npm run mail:preview` los genera como HTML para revisar el diseño sin enviar nada.
 
 La base de datos registra cuándo salió cada correo (`owner_notified_at` y `confirmation_sent_at`).
 

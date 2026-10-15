@@ -3,8 +3,8 @@
  *
  *   npm run mail:preview  → genera los dos correos con datos de ejemplo en .mail-previews/
  *                           (ábrelos en el navegador para ver el diseño; no envía nada)
- *   npm run mail:test     → envía los dos correos de ejemplo a MAIL_TO usando el SMTP configurado
- *                           (sirve para comprobar que Gmail y tus credenciales funcionan)
+ *   npm run mail:test     → envía los dos correos de ejemplo a MAIL_TO con el proveedor configurado
+ *                           (sirve para comprobar que el proveedor y sus credenciales funcionan)
  */
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -12,7 +12,7 @@ import { env } from '../config/env.js'
 import { buildClientConfirmationEmail } from '../modules/contacts/emails/clientConfirmation.email.js'
 import type { ContactEmailData } from '../modules/contacts/emails/emailData.js'
 import { buildOwnerNotificationEmail } from '../modules/contacts/emails/ownerNotification.email.js'
-import { mailMode, previewDirectory, sendMail, verifyMailer } from '../services/mail/mailer.js'
+import { deliversRealEmail, mailProviderName, previewDirectory, sendMail, verifyMailer } from '../services/mail/mailer.js'
 
 /** Mensaje ficticio para probar las plantillas */
 const sampleContact: ContactEmailData = {
@@ -42,10 +42,11 @@ if (command === 'preview') {
   }
   console.log('\nÁbrelos en el navegador para revisar el diseño.')
 } else if (command === 'test') {
-  if (mailMode !== 'smtp') {
-    console.error('❌ SMTP no configurado. Completa SMTP_HOST, SMTP_USER y SMTP_PASS en .env')
+  if (!deliversRealEmail) {
+    console.error('❌ No hay proveedor de correo configurado (Google Apps Script, Resend, Brevo o SMTP). Revisa .env')
     process.exit(1)
   }
+  console.log(`Enviando con ${mailProviderName}...`)
   if (!(await verifyMailer())) process.exit(1)
 
   // Ambos correos llegan a TU bandeja (MAIL_TO) para que veas cómo los recibe el cliente

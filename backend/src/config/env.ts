@@ -52,12 +52,21 @@ const envSchema = z.object({
   /** URL pública del portafolio: se usa en los enlaces de los correos */
   SITE_URL: z.url('SITE_URL debe ser una URL válida').default('http://localhost:5173'),
 
-  // ─── Correo (SMTP) ─────────────────────────────────────────────
-  // Si SMTP_HOST está vacío, los correos NO se envían: se guardan como HTML en .mail-previews/
+  // ─── Correo ────────────────────────────────────────────────────
+  // Se usa el primer proveedor configurado (ver services/mail/mailer.ts):
+  // Resend → Brevo → Google Apps Script → SMTP → vista previa (.mail-previews/, no envía nada)
+  RESEND_API_KEY: optionalText,
+  BREVO_API_KEY: optionalText,
+  /** URL de la aplicación web de Google Apps Script (termina en /exec) */
+  GOOGLE_SCRIPT_URL: optionalText.pipe(z.url('GOOGLE_SCRIPT_URL debe ser una URL válida').optional()),
+  /** Clave compartida con el script (RELAY_SECRET en sus propiedades) */
+  GOOGLE_SCRIPT_SECRET: optionalText,
   SMTP_HOST: optionalText,
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_USER: optionalText,
   SMTP_PASS: optionalText,
+  /** Dirección del remitente (Resend/Brevo). Si no se define: SMTP_USER o MAIL_TO */
+  MAIL_FROM: optionalText.pipe(z.email('MAIL_FROM debe ser un correo válido').optional()),
   /** Nombre que verá el destinatario como remitente */
   MAIL_FROM_NAME: z.string().default('Oismer Sehuanes'),
   /** Bandeja donde llegan las notificaciones de nuevos mensajes (la tuya) */
