@@ -45,6 +45,10 @@ const envSchema = z.object({
   /** Clave para consultar los mensajes recibidos (cabecera Authorization: Bearer <clave>) */
   ADMIN_API_KEY: z.string().min(24, 'ADMIN_API_KEY debe tener al menos 24 caracteres'),
 
+  /** Datos del commit desplegado: Railway los define automáticamente en cada despliegue */
+  RAILWAY_GIT_COMMIT_SHA: optionalText,
+  RAILWAY_GIT_COMMIT_MESSAGE: optionalText,
+
   /** URL pública del portafolio: se usa en los enlaces de los correos */
   SITE_URL: z.url('SITE_URL debe ser una URL válida').default('http://localhost:5173'),
 

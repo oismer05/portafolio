@@ -4,12 +4,21 @@ import { knexConfig } from './knexConfig.js'
 /** Única instancia de conexión (pool) compartida por toda la aplicación */
 export const db = knex(knexConfig)
 
-/** Comprueba que MySQL responde. Se usa en /api/health y al arrancar */
-export async function isDatabaseReachable(): Promise<boolean> {
+/**
+ * Mide cuánto tarda MySQL en responder.
+ * Devuelve los milisegundos, o null si la base de datos no responde.
+ */
+export async function pingDatabase(): Promise<number | null> {
+  const startedAt = performance.now()
   try {
     await db.raw('SELECT 1')
-    return true
+    return Math.round(performance.now() - startedAt)
   } catch {
-    return false
+    return null
   }
+}
+
+/** Comprueba que MySQL responde. Se usa al arrancar el servidor */
+export async function isDatabaseReachable(): Promise<boolean> {
+  return (await pingDatabase()) !== null
 }

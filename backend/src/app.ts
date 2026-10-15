@@ -1,11 +1,15 @@
 import cors from 'cors'
 import express from 'express'
 import helmet from 'helmet'
+import { z } from 'zod'
 import { env } from './config/env.js'
-import { isDatabaseReachable } from './database/connection.js'
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 import { apiLimiter } from './middlewares/rateLimiters.js'
 import { contactRouter } from './modules/contacts/contact.routes.js'
+import { healthRouter, sendHealth } from './modules/health/health.routes.js'
+
+// Mensajes de validación de Zod en español (ej. "campo obligatorio" en vez de "Invalid input")
+z.config(z.locales.es())
 
 /** Construye la aplicación Express (separada de server.ts para poder probarla sin abrir un puerto) */
 export function createApp() {
@@ -21,14 +25,8 @@ export function createApp() {
   app.use('/api', apiLimiter)
 
   // Rutas
-  app.get('/api/health', async (_req, res) => {
-    const databaseUp = await isDatabaseReachable()
-    res.status(databaseUp ? 200 : 503).json({
-      status: databaseUp ? 'ok' : 'degraded',
-      database: databaseUp ? 'up' : 'down',
-      timestamp: new Date().toISOString(),
-    })
-  })
+  app.get('/', apiLimiter, sendHealth) // la raíz muestra la misma página de estado
+  app.use('/api/health', healthRouter)
   app.use('/api/contacts', contactRouter)
 
   // Manejo de errores (siempre al final)

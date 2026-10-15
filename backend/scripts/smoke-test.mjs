@@ -35,6 +35,11 @@ const checks = [
     const { status, json } = await request('/health')
     return status === 200 && json?.database === 'up'
   }],
+  ['Un navegador recibe la página de estado (HTML)', async () => {
+    const response = await fetch(`${API_URL}/health`, { headers: { Accept: 'text/html' } })
+    const html = await response.text()
+    return response.status === 200 && response.headers.get('content-type')?.includes('text/html') && html.includes('Todo funciona')
+  }],
   ['Rechaza datos inválidos (400)', async () => (await request('/contacts', { method: 'POST', body: { name: 'A' } })).status === 400],
   ['Rechaza peticiones gigantes (413)', async () =>
     (await request('/contacts', { method: 'POST', body: contact({ message: 'x'.repeat(50_000) }) })).status === 413],
