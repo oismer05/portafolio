@@ -1,0 +1,21 @@
+# Dependencias y builds
+node_modules/
+dist/
+dist-ssr/
+
+# Secretos: NUNCA se suben (cada carpeta tiene su .env.example)
+.env
+.env.*
+!.env.example
+
+# Vistas previas de correos
+.mail-previews/
+
+# Plataformas y editores
+.vercel/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log

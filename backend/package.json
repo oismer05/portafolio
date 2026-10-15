@@ -1,0 +1,42 @@
+{
+  "name": "osg-portfolio-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API del portafolio de Oismer Sehuanes: recibe y gestiona los mensajes del formulario de contacto",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "build": "tsc",
+    "start": "node --env-file-if-exists=.env dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "migrate": "tsx --env-file-if-exists=.env src/database/cli/migrate.ts latest",
+    "migrate:rollback": "tsx --env-file-if-exists=.env src/database/cli/migrate.ts rollback",
+    "migrate:status": "tsx --env-file-if-exists=.env src/database/cli/migrate.ts status",
+    "migrate:make": "tsx --env-file-if-exists=.env src/database/cli/migrate.ts make",
+    "migrate:prod": "node --env-file-if-exists=.env dist/database/cli/migrate.js latest",
+    "mail:preview": "tsx --env-file-if-exists=.env src/scripts/mail.ts preview",
+    "mail:test": "tsx --env-file-if-exists=.env src/scripts/mail.ts test",
+    "test:smoke": "node scripts/smoke-test.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "knex": "^3.3.0",
+    "mysql2": "^3.24.5",
+    "nodemailer": "^10.0.16",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.43",
+    "@types/nodemailer": "^8.0.2",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.2"
+  }
+}

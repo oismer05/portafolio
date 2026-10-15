@@ -1,0 +1,143 @@
+# ─────────────────────────────────────────────────────────────
+# Integración continua: se ejecuta en cada push y pull request a main.
+# Si algo falla, el cambio no debe llegar a producción
+# (Vercel y Railway están configurados para esperar a que este flujo pase).
+# ─────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Si llega un push nuevo a la misma rama, se cancela la ejecución anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend · lint, tipos y build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tipos
+        run: npm run typecheck
+      - name: Build + pre-renderizado
+        run: npm run build
+        env:
+          VITE_SITE_URL: https://www.oismersehuanes.com
+      - name: Dependencias vulnerables
+        run: npm audit --audit-level=high
+
+  backend:
+    name: Backend · build, migraciones y pruebas
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    # MySQL real para probar migraciones y la API completa
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: portfolio
+          MYSQL_USER: ci
+          MYSQL_PASSWORD: ci_password
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      NODE_ENV: test
+      PORT: 4000
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: ci
+      DB_PASSWORD: ci_password
+      DB_NAME: portfolio
+      ADMIN_API_KEY: ci-admin-key-0123456789abcdef0123456789abcdef
+      CONTACT_RATE_LIMIT_MAX: 50
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - name: Tipos
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Dependencias vulnerables
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Migraciones (aplicar, revertir y volver a aplicar)
+        run: |
+          node dist/database/cli/migrate.js latest
+          node dist/database/cli/migrate.js rollback
+          node dist/database/cli/migrate.js latest
+
+      - name: Arrancar la API
+        run: |
+          node dist/server.js > api.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            curl -sf http://localhost:4000/api/health && exit 0
+            sleep 1
+          done
+          cat api.log
+          exit 1
+
+      - name: Pruebas de humo
+        run: npm run test:smoke
+        env:
+          API_URL: http://localhost:4000/api
+
+      - name: Log de la API (si algo falló)
+        if: failure()
+        run: cat api.log
+
+  docker:
+    name: Docker · construir imágenes
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Construir imagen ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service }}
+          push: false
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
