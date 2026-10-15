@@ -1,0 +1,177 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Sistema de diseño
+   - Paleta pastel de baja saturación (lavanda, menta, durazno, cielo, mantequilla)
+   - Tokens semánticos (canvas, surface, ink, muted, line) que cambian en modo oscuro
+   ========================================================================== */
+
+/* El modo oscuro se activa con la clase .dark en <html> (ver ThemeProvider) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Tipografías auto-alojadas con @fontsource (mejor rendimiento y SEO) */
+  --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Sora Variable', 'Plus Jakarta Sans Variable', ui-sans-serif, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  /* Lavanda: color de marca principal */
+  --color-lavender-50: #f8f6fe;
+  --color-lavender-100: #f1eefc;
+  --color-lavender-200: #e2dcf9;
+  --color-lavender-300: #cbbff3;
+  --color-lavender-400: #a996e8;
+  --color-lavender-500: #8b76d9;
+  --color-lavender-600: #6e58c2;
+  --color-lavender-700: #574597;
+
+  /* Menta */
+  --color-mint-100: #e6f6f0;
+  --color-mint-200: #c9ede0;
+  --color-mint-300: #a3deca;
+  --color-mint-400: #74c7aa;
+  --color-mint-600: #3a8f73;
+
+  /* Durazno */
+  --color-peach-100: #fdeee8;
+  --color-peach-200: #fad9cc;
+  --color-peach-300: #f5bfa9;
+  --color-peach-400: #ee9f82;
+  --color-peach-600: #c2674a;
+
+  /* Cielo */
+  --color-sky-soft-100: #e8f2fb;
+  --color-sky-soft-200: #cfe4f6;
+  --color-sky-soft-300: #a9cdee;
+  --color-sky-soft-400: #7aafe0;
+  --color-sky-soft-600: #3f78b0;
+
+  /* Mantequilla */
+  --color-butter-100: #fdf6e3;
+  --color-butter-200: #f9eac0;
+  --color-butter-300: #f2d88a;
+  --color-butter-600: #a5822a;
+
+  /* Animaciones reutilizables */
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-blob: blob 18s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -40px) scale(1.08); }
+    66% { transform: translate(-25px, 20px) scale(0.95); }
+  }
+}
+
+/* Tokens semánticos: se resuelven según el tema activo */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+}
+
+:root {
+  --canvas: #fbfaf7;
+  --surface: #ffffff;
+  --surface-2: #f5f3ef;
+  --ink: #1e1b2e;
+  --muted: #625f75;
+  --line: #e9e6ef;
+  --brand: #6e58c2;
+  /* Degradado de marca "tinta": una sola familia de color, de índigo profundo a lavanda */
+  --brand-gradient: linear-gradient(115deg, #2e2668 0%, #5b47b8 55%, #8b76d9 100%);
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #12111a;
+  --surface: #1b1a26;
+  --surface-2: #232232;
+  --ink: #eceaf5;
+  --muted: #a19fb5;
+  --line: #2e2c40;
+  --brand: #a996e8;
+  --brand-gradient: linear-gradient(115deg, #f1eefc 0%, #cbbff3 50%, #a996e8 100%);
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  /* Compensa la barra de navegación fija al saltar a una sección */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+
+  ::selection {
+    @apply bg-lavender-200 text-lavender-700;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-lavender-500;
+  }
+}
+
+@layer components {
+  /* Contenedor estándar de cada sección */
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  /* Tarjeta con efecto vidrio */
+  .glass {
+    @apply border border-white/60 bg-white/60 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+  }
+
+  /* Texto con el degradado de marca (tonal, sin mezclar colores) */
+  .text-gradient {
+    background-image: var(--brand-gradient);
+    @apply bg-clip-text text-transparent;
+  }
+
+  /* Fondo con el degradado de marca (barras, líneas, bordes) */
+  .bg-brand-gradient {
+    background-image: var(--brand-gradient);
+  }
+
+  /* Patrón de puntos sutil para fondos */
+  .bg-dots {
+    background-image: radial-gradient(var(--line) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
+
+/* Accesibilidad: respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

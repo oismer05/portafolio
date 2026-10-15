@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────────────────────
+# Entorno completo en contenedores: MySQL + API + sitio web.
+#
+#   1. cp .env.example .env   (y completa las claves)
+#   2. docker compose up --build
+#   3. Abre http://localhost:8080
+#
+# Solo el sitio (puerto 8080) queda expuesto. La API y MySQL viven en una red
+# privada de Docker; Nginx redirige /api al backend.
+# ─────────────────────────────────────────────────────────────
+name: osg-portfolio
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-portfolio}
+      MYSQL_USER: ${DB_USER:-portfolio}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      # Solo accesible desde tu PC (útil para DBeaver/Workbench). 3307 evita choques con XAMPP
+      - '127.0.0.1:3307:3306'
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # "production" exige un dominio real; este entorno es local
+      NODE_ENV: development
+      PORT: 4000
+      TRUST_PROXY: 1 # detrás de Nginx
+      SITE_URL: http://localhost:8080
+      CORS_ORIGINS: http://localhost:8080
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-portfolio}
+      DB_USER: ${DB_USER:-portfolio}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?Define ADMIN_API_KEY en .env}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Oismer Sehuanes}
+      MAIL_TO: ${MAIL_TO:-oismer3405@gmail.com}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_SITE_URL: http://localhost:8080
+        VITE_API_URL: /api
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
+
+volumes:
+  mysql_data:

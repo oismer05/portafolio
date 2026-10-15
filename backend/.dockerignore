@@ -1,0 +1,10 @@
+# Lo que NO debe entrar a la imagen (más liviana y sin secretos)
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.mail-previews
+*.log
+Dockerfile
+.dockerignore

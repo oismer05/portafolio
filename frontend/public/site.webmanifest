@@ -1,0 +1,15 @@
+{
+  "name": "Oismer Sehuanes · Desarrollador Full Stack",
+  "short_name": "OSG",
+  "description": "Portafolio de Oismer Sehuanes Guzmán, desarrollador Full Stack en Barranquilla.",
+  "lang": "es-CO",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#fbfaf7",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
