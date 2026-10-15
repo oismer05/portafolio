@@ -16,11 +16,11 @@
  * Límite gratuito de Google: ~100 destinatarios por día (cuenta Gmail personal).
  */
 
-/** Máximo de caracteres aceptados por campo (protege contra abusos) */
-var LIMITS = { subject: 250, html: 200000, text: 50000, name: 100 }
-
 /** Recibe la petición de la API y envía el correo */
 function doPost(e) {
+  // Máximo de caracteres aceptados por campo (protege contra abusos)
+  var LIMITS = { subject: 250, html: 200000, text: 50000, name: 100 }
+
   try {
     var payload = JSON.parse(e.postData.contents)
 
